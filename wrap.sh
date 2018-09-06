@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /home/evgsol/playscreensaver/
+cd ${0%/*}
 
 export SDL_WINDOWID="$XSCREENSAVER_WINDOW"
 
