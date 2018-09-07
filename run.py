@@ -7,6 +7,8 @@ import time
 
 import pygame
 
+from Xlib import display
+
 from level import Level
 
 
@@ -15,10 +17,25 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
 pygame.init()
-screen = pygame.display.set_mode((0, 0))
+
+
+def get_geometry(window_id):
+	return display.Display().create_resource_object(
+		"window", window_id).get_geometry()
+
+
+if not DEBUG:
+	geometry = get_geometry(int(os.getenv("XSCREENSAVER_WINDOW"), 16))
+	screen_size = (geometry.width, geometry.height)
+else:
+	screen_size = (0, 0)
+
+screen = pygame.display.set_mode(screen_size)
 
 if DEBUG:
-	pygame.display.toggle_fullscreen()
+	geometry = get_geometry(pygame.display.get_wm_info()["window"])
+
+height, width = geometry.width, geometry.height
 
 
 def get_n():
@@ -27,7 +44,6 @@ def get_n():
 
 N = get_n()
 level = Level(N)
-height, width = pygame.display.get_surface().get_size()
 edge = min(height, width) * 9 / 10
 while True:
 	screen.fill(BLACK)
