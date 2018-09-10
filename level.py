@@ -34,10 +34,14 @@ class Cell:
     left = None
     right = None
     visited = False
+    height = None
+    width = None
 
-    def __init__(self, x, y):
+    def __init__(self, x, y, h, w):
         self.x = x
         self.y = y
+        self.height = math.ceil(h)
+        self.width = math.ceil(w)
 
     def walls(self):
         return [
@@ -45,25 +49,30 @@ class Cell:
             if wall is not None
         ]
 
-    def draw(self, surface, x, y, height, width, img):
-        scaled_img = pygame.transform.scale(img, (height, width))
-        img_surface = pygame.Surface((height, width))
+    def wall_rects(self, x, y):
+        result = []
+        if not self.left.passable:
+            result.append((x, y, self.height / 10, self.width))
+        if not self.right.passable:
+            result.append((
+                x + math.ceil(self.height * 9 / 10), y,
+                self.height / 10, self.width))
+        if not self.up.passable:
+            result.append((x, y, self.height, self.width / 10))
+        if not self.down.passable:
+            result.append((
+                x, y + math.ceil(self.width * 9 / 10),
+                self.height, self.width / 10))
+        return result
+
+    def draw(self, surface, x, y, img):
+        scaled_img = pygame.transform.scale(img, (self.height, self.width))
+        img_surface = pygame.Surface((self.height, self.width))
         img_surface.blit(scaled_img, [0, 0])
         surface.blit(img_surface, (x, y))
-        if not self.left.passable:
+        for rect in self.wall_rects(x, y):
             pygame.draw.rect(
-                surface, WALL_COLOUR, (x, y, height / 10, width), 0)
-        if not self.right.passable:
-            pygame.draw.rect(
-                surface, WALL_COLOUR,
-                (math.ceil(x + height * 9 / 10), y, height / 10, width), 0)
-        if not self.up.passable:
-            pygame.draw.rect(
-                surface, WALL_COLOUR, (x, y, height, width / 10), 0)
-        if not self.down.passable:
-            pygame.draw.rect(
-                surface, WALL_COLOUR,
-                (x, math.ceil(y + width * 9 / 10), height, width / 10), 0)
+                surface, WALL_COLOUR, rect, 0)
 
 
 class Player:
@@ -91,11 +100,13 @@ class Level:
 
     def __init__(self, n, height, width):
         self.n = n
+        cell_height = float(height) / self.n
+        cell_width = float(width) / self.n
         self.cells = list()
         self.stack = list()
         for i in range(n):
             for j in range(n):
-                self.cells.append(Cell(i, j))
+                self.cells.append(Cell(i, j, cell_height, cell_width))
 
         for i in range(n + 1):
             for j in range(n):
@@ -163,7 +174,6 @@ class Level:
             for j in range(self.n):
                 self.get_cell(i, j).draw(
                     surface, cell_height * i, cell_width * j,
-                    math.ceil(cell_height), math.ceil(cell_width),
                     IMAGES[(i + j) % len(IMAGES)])
 
         now = time.time()
