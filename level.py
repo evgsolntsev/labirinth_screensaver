@@ -1,4 +1,5 @@
 import math
+import os
 import random
 import sys
 import time
@@ -13,7 +14,9 @@ BLACK = (0, 0, 0)
 RED = (125, 0, 0)
 GREY = (80, 80, 80)
 
-COLOURS = [YELLOW, GREEN, BLUE]
+IMAGES = [
+	pygame.image.load(os.path.join(root, f))
+	for root, dirs, files in os.walk("images/floors/") for f in files]
 JUMP_TIME = 0.5
 
 
@@ -42,12 +45,14 @@ class Cell:
 			if wall is not None
 		]
 
-	def draw(self, surface, x, y, height, width, colour=None):
+	def draw(self, surface, x, y, height, width, img):
 		if not self.visible:
 			return
 
-		pygame.draw.rect(
-			surface, colour or YELLOW, (x, y, height, width), 0)
+		scaled_img = pygame.transform.scale(img, (height, width))
+		img_surface = pygame.Surface((height, width))
+		img_surface.blit(scaled_img, [0, 0])
+		surface.blit(img_surface, (x, y))
 		if not self.left.passable:
 			pygame.draw.rect(
 				surface, GREY, (x, y, height / 10, width), 0)
@@ -151,7 +156,7 @@ class Level:
 				self.get_cell(i, j).draw(
 					surface, x + cell_height * i, y + cell_width * j,
 					math.ceil(cell_height), math.ceil(cell_width),
-					colour=COLOURS[(i + j) % len(COLOURS)])
+					IMAGES[(i + j) % len(IMAGES)])
 
 		now = time.time()
 		if now - self.last > JUMP_TIME:
