@@ -13,6 +13,7 @@ BLUE = (0, 0, 125)
 BLACK = (0, 0, 0)
 RED = (125, 0, 0)
 GREY = (80, 80, 80)
+WALL_COLOUR = RED
 
 IMAGES = [
 	pygame.image.load(os.path.join(root, f))
@@ -55,17 +56,17 @@ class Cell:
 		surface.blit(img_surface, (x, y))
 		if not self.left.passable:
 			pygame.draw.rect(
-				surface, GREY, (x, y, height / 10, width), 0)
+				surface, WALL_COLOUR, (x, y, height / 10, width), 0)
 		if not self.right.passable:
 			pygame.draw.rect(
-				surface, GREY,
+				surface, WALL_COLOUR,
 				(math.ceil(x + height * 9 / 10), y, height / 10, width), 0)
 		if not self.up.passable:
 			pygame.draw.rect(
-				surface, GREY, (x, y, height, width / 10), 0)
+				surface, WALL_COLOUR, (x, y, height, width / 10), 0)
 		if not self.down.passable:
 			pygame.draw.rect(
-				surface, GREY,
+				surface, WALL_COLOUR,
 				(x, math.ceil(y + width * 9 / 10), height, width / 10), 0)
 
 
