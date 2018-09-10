@@ -5,8 +5,11 @@ import random
 import sys
 import time
 
+from operator import itemgetter
+
 import pygame
 
+from screeninfo import get_monitors
 from Xlib import display
 
 from level import Level
@@ -20,15 +23,18 @@ pygame.init()
 
 
 def get_geometry(window_id):
-	return display.Display().create_resource_object(
-		"window", window_id).get_geometry()
+	drawable = display.Display().create_resource_object(
+		"window", window_id)
+	return drawable.get_geometry()
 
 
 if not DEBUG:
 	geometry = get_geometry(int(os.getenv("XSCREENSAVER_WINDOW"), 16))
 	screen_size = (geometry.width, geometry.height)
 else:
-	screen_size = (0, 0)
+	screen_size = min(
+		((m.width, m.height) for m in get_monitors()),
+		key=itemgetter(0))
 
 screen = pygame.display.set_mode(screen_size)
 
