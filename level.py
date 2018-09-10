@@ -7,12 +7,11 @@ import time
 import pygame
 
 
-YELLOW = (125, 125, 0)
-GREEN = (0, 125, 0)
-BLUE = (0, 0, 125)
+YELLOW = (255, 255, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
 BLACK = (0, 0, 0)
 RED = (125, 0, 0)
-GREY = (80, 80, 80)
 WALL_COLOUR = RED
 
 IMAGES = [
@@ -30,12 +29,12 @@ class Wall:
 
 
 class Cell:
-    visible = False
     up = None
     down = None
     left = None
     right = None
-    
+    visited = False
+
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -47,9 +46,6 @@ class Cell:
         ]
 
     def draw(self, surface, x, y, height, width, img):
-        if not self.visible:
-            return
-
         scaled_img = pygame.transform.scale(img, (height, width))
         img_surface = pygame.Surface((height, width))
         img_surface.blit(scaled_img, [0, 0])
@@ -72,10 +68,12 @@ class Cell:
 
 class Player:
     def draw(self, surface, x, y, height, width):
+        circle_x, circle_y = int(x + height / 2), int(y + width / 2)
         pygame.draw.circle(
             surface, (180, 180, 0),
-            (int(x + height / 2), int(y + width / 2)),
+            (circle_x, circle_y),
             int(min(height, width) * 3 / 10))
+        return circle_x, circle_y
 
 
 class Level:
@@ -87,8 +85,11 @@ class Level:
     next_player_y = 0
     last = 0
     stack = None
+    filter_surface = None
+    h = 0
+    w = 0
 
-    def __init__(self, n):
+    def __init__(self, n, height, width):
         self.n = n
         self.cells = list()
         self.stack = list()
@@ -121,7 +122,7 @@ class Level:
                     w.cells.append(c)
 
         c = self.get_cell(0, 0)
-        c.visible = True
+        c.visited = True
         achiveable_cells = set([c])
         walls = c.walls()
         while walls:
@@ -131,7 +132,11 @@ class Level:
                     achiveable_cells.add(c)
                     walls.extend(c.walls())
                     w.passable = True
-        
+
+        self.h = height
+        self.w = width
+        self.filter_surface = pygame.surface.Surface((self.h + 1, self.w + 1))
+        self.filter_surface.fill(pygame.color.Color("White"))
 
     def get_cell(self, x, y):
         return self.cells[x * self.n + y]
@@ -149,13 +154,15 @@ class Level:
 
         return result
 
-    def draw(self, surface, x, y, height, width):
-        cell_height = float(height) / self.n
-        cell_width = float(width) / self.n
+    def draw(self):
+        surface = pygame.surface.Surface((self.h, self.w))
+        surface.fill(BLACK)
+        cell_height = float(self.h) / self.n
+        cell_width = float(self.w) / self.n
         for i in range(self.n):
             for j in range(self.n):
                 self.get_cell(i, j).draw(
-                    surface, x + cell_height * i, y + cell_width * j,
+                    surface, cell_height * i, cell_width * j,
                     math.ceil(cell_height), math.ceil(cell_width),
                     IMAGES[(i + j) % len(IMAGES)])
 
@@ -167,8 +174,8 @@ class Level:
             cell = self.get_cell(self.next_player_x, self.next_player_y)
             self.stack.append(cell)
             for c in self.neighbours(cell):
-                if not c.visible:
-                    c.visible = True
+                if not c.visited:
+                    c.visited = True
                     break
             else:
                 self.stack.pop()
@@ -177,12 +184,28 @@ class Level:
             self.next_player_x = c.x
             self.next_player_y = c.y
 
-        self.player.draw(
+        player_coords = self.player.draw(
             surface,
-            x + cell_height * (self.player_x + (self.next_player_x - self.player_x) * (now - self.last) / JUMP_TIME),
-            y + cell_width * (self.player_y + (self.next_player_y - self.player_y) * (now - self.last) / JUMP_TIME),
+            cell_height * (self.player_x + (self.next_player_x - self.player_x) * (now - self.last) / JUMP_TIME),
+            cell_width * (self.player_y + (self.next_player_y - self.player_y) * (now - self.last) / JUMP_TIME),
             cell_height, cell_width,
         )
+
+        pygame.draw.circle(
+            self.filter_surface, (50, 50, 50, 255),
+            player_coords, int(cell_height * 3))
+
+        lightening_surface = pygame.surface.Surface((self.h + 1, self.w + 1))
+        lightening_surface.fill(pygame.color.Color("Black"))
+        lightening_surface.blit(
+            self.filter_surface, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
+        pygame.draw.circle(
+            lightening_surface, (0, 0, 0, 255),
+            player_coords, int(cell_height * 3))
+
+
+        surface.blit(
+            lightening_surface, (0, 0), special_flags=pygame.BLEND_RGBA_SUB)
 
         if (
             self.player_x == (self.n - 1) and
@@ -190,3 +213,4 @@ class Level:
         ):
             sys.exit(0)
 
+        return surface

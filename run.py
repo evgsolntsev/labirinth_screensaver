@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import math
 import os
 import random
 import sys
@@ -49,14 +50,18 @@ def get_n():
 
 
 N = get_n()
-level = Level(N)
-edge = min(height, width) * 9 / 10
+edge = math.ceil(min(height, width) * 9 / 10)
+level = Level(N, edge, edge)
 while True:
     screen.fill(BLACK)
     try:
-        level.draw(screen, (height - edge) / 2, (width - edge) / 2, edge, edge)
+        surface = level.draw()
+        screen.blit(
+            surface, (int((height - edge) / 2), int((width - edge) / 2)),
+            special_flags=pygame.BLEND_RGBA_ADD)
     except:
-        level = Level(get_n())
+        level = Level(get_n(), edge, edge)
+        raise
 
     if DEBUG:
         events = pygame.event.get()
