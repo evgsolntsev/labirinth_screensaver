@@ -65,8 +65,9 @@ while True:
 
     if DEBUG:
         events = pygame.event.get()
-        if any(e for e in events if e.type == pygame.KEYDOWN):
-            sys.exit(0)
+        for e in events:
+            if e.type == pygame.KEYDOWN and e.key == pygame.K_RETURN:
+                sys.exit(0)
 
     pygame.display.update()
     time.sleep(0.01)
