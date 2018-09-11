@@ -37,7 +37,7 @@ class Cell:
     height = None
     width = None
 
-    def __init__(self, x, y, h, w):
+    def __init__(self, x, y, h=10, w=10):
         self.x = x
         self.y = y
         self.height = math.ceil(h)
@@ -98,11 +98,13 @@ class Level:
     cells_surface = None
     h = 0
     w = 0
+    vision_radius = 0
 
-    def __init__(self, n, height, width):
+    def __init__(self, n, height=100, width=100):
         self.n = n
         cell_height = float(height) / self.n
         cell_width = float(width) / self.n
+        self.vision_radius = int(cell_height)
         self.cells = list()
         self.stack = list()
         for i in range(n):
@@ -206,18 +208,50 @@ class Level:
             cell_height, cell_width,
         )
 
+        walls_for_shadows = []
+        for i in range(-1, 1):
+            for j in range(-1, 1):
+                cell_x, cell_y = self.player_x + i, self.player_y + j
+                if (
+                    (cell_x > -1) and (cell_x < self.n) and
+                    (cell_y > -1) and (cell_y < self.n)
+                ):
+                    walls_for_shadows.extend(
+                        self.get_cell(cell_x, cell_y).wall_rects(
+                            cell_height * cell_x, cell_width * cell_y))
+
+        lines_for_shadows = [
+            ((0, 0), (self.h, 0)),
+            ((self.h, 0), (self.h, self.w)),
+            ((self.h, self.w), (0, self.w)),
+            ((0, self.w), (0, 0))
+        ]
+        for w in walls_for_shadows:
+            lines_for_shadows.extend([
+                [(w[0], w[1]), (w[0] + w[2], w[1])],
+                [(w[0] + w[2], w[1]), (w[0] + w[2], w[1] + w[3])],
+                [(w[0] + w[2], w[1] + w[3]), (w[0], w[1] + w[3])],
+                [(w[0], w[1] + w[3]), (w[0], w[1])]
+            ])
+
+        adding_surface = pygame.surface.Surface((self.h + 1, self.w + 1))
+        out_surface = pygame.surface.Surface((self.h + 1, self.w + 1))
+        out_surface.fill(pygame.color.Color("White"))
         pygame.draw.circle(
-            self.filter_surface, (50, 50, 50, 255),
-            player_coords, int(cell_height * 3))
+            out_surface, pygame.color.Color("Black"),
+            player_coords, self.vision_radius)
+
+        # ray tracing?
+
+        self.adding_surface.blit(
+            out_surface, (0, 0), special_flags=pygame.BLEND_RGBA_MAX)
+        self.filter_surface.blit(
+            adding_surface, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
 
         lightening_surface = pygame.surface.Surface((self.h + 1, self.w + 1))
         lightening_surface.fill(pygame.color.Color("Black"))
         lightening_surface.blit(
             self.filter_surface, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
-        pygame.draw.circle(
-            lightening_surface, (0, 0, 0, 255),
-            player_coords, int(cell_height * 3))
-
 
         surface.blit(
             lightening_surface, (0, 0), special_flags=pygame.BLEND_RGBA_SUB)

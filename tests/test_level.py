@@ -18,6 +18,8 @@ def test_neighbours():
 	cell = level.get_cell(1, 1)
 	cell.up.passable = True
 	cell.left.passable = True
+	cell.down.passable = False
+	cell.right.passable = False
 
 	assert set(((0, 1), (1, 0))) == set(
 		(c.x, c.y) for c in level.neighbours(cell))
@@ -28,34 +30,10 @@ def test_visible_changing():
 	cell = level.get_cell(1, 1)
 	cell.up.passable = True
 	cell.left.passable = True
+	cell.down.passable = False
+	cell.right.passable = False
 
 	for c in level.neighbours(cell):
-		c.visible = True
+		c.visited = True
 
-	assert len([c for c in level.cells if c.visible]) == 2
-
-
-def test_passable_changing():
-	level = Level(3)
-	cell = level.get_cell(1, 1)
-	
-	assert level.get_cell(0, 1).right.passable == False
-	assert level.get_cell(2, 1).left.passable == False
-	assert level.get_cell(1, 2).up.passable == False
-	assert level.get_cell(1, 0).down.passable == False
-
-	cell.up.passable = True
-	cell.left.passable = True
-
-	assert level.get_cell(0, 1).right.passable == True
-	assert level.get_cell(2, 1).left.passable == False
-	assert level.get_cell(1, 2).up.passable == False
-	assert level.get_cell(1, 0).down.passable == True
-
-	cell.down.passable = True
-	cell.right.passable = True
-
-	assert level.get_cell(0, 1).right.passable == True
-	assert level.get_cell(2, 1).left.passable == True
-	assert level.get_cell(1, 2).up.passable == True
-	assert level.get_cell(1, 0).down.passable == True
+	assert len([c for c in level.cells if c.visited]) == 3
