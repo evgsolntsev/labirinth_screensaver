@@ -95,6 +95,7 @@ class Level:
     last = 0
     stack = None
     filter_surface = None
+    cells_surface = None
     h = 0
     w = 0
 
@@ -149,6 +150,14 @@ class Level:
         self.filter_surface = pygame.surface.Surface((self.h + 1, self.w + 1))
         self.filter_surface.fill(pygame.color.Color("White"))
 
+        self.cells_surface = pygame.surface.Surface((self.h, self.w))
+        self.cells_surface.fill(pygame.color.Color("Black"))
+        for i in range(self.n):
+            for j in range(self.n):
+                self.get_cell(i, j).draw(
+                    self.cells_surface, cell_height * i, cell_width * j,
+                    IMAGES[(i + j) % len(IMAGES)])
+
     def get_cell(self, x, y):
         return self.cells[x * self.n + y]
 
@@ -168,13 +177,9 @@ class Level:
     def draw(self):
         surface = pygame.surface.Surface((self.h, self.w))
         surface.fill(BLACK)
+        surface.blit(self.cells_surface, (0, 0))
         cell_height = float(self.h) / self.n
         cell_width = float(self.w) / self.n
-        for i in range(self.n):
-            for j in range(self.n):
-                self.get_cell(i, j).draw(
-                    surface, cell_height * i, cell_width * j,
-                    IMAGES[(i + j) % len(IMAGES)])
 
         now = time.time()
         if now - self.last > JUMP_TIME:
