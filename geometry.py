@@ -1,16 +1,15 @@
 import math
 
 
-EBS = 0.0001
+EPS = 0.0001
 
 
 def is_equal(a, b):
-    return math.fabs(a - b) < EBS
+    return math.fabs(a - b) < EPS
 
 
 class Dot:
-    x = 0
-    y = 0
+    __slots__ = ("x", "y")
 
     def __init__(self, x=0, y=0):
         self.x = x
@@ -22,14 +21,29 @@ class Dot:
         else:
             raise NotImplemented()
 
+    def __eq__(self, v):
+        return is_equal(self.x, v.x) and is_equal(self.y, v.y)
+
+    def __ne__(self, v):
+        return not(self == v)
+
 
 class Vector:
-    x = 0
-    y = 0
+    __slots__ = ("x", "y")
 
     def __init__(self, x=0, y=0):
-        self.x = x
-        self.y = y
+        if isinstance(x, Dot) and isinstance(y, Dot):
+            self.x = y.x - x.x
+            self.y = y.y - x.y
+        else:
+            self.x = x
+            self.y = y
+
+    def __eq__(self, v):
+        return is_equal(self.x, v.x) and is_equal(self.y, v.y)
+
+    def __ne__(self, v):
+        return not(self == v)
 
     def __mul__(self, n):
         """Scalar multiplication or multiplication by number."""
@@ -62,15 +76,21 @@ class Vector:
         return is_equal(self ^ v, 0)
 
     def is_codirected(self, v):
-        return self.is_collinear(v) and (self * v) > 0
+        return self.is_collinear(v) and (self * v) >= 0
 
 
 class Segment:
-    a = None
-    b = None
+    __slots__ = ("a", "b")
 
     def __init__(self, a, b):
         if not (isinstance(a, Dot) and isinstance(b, Dot)):
             raise Exception("Segment should be created from two Dots")
         self.a = a
         self.b = b
+
+    def __contains__(self, c):
+        if c == self.a or c == self.b:
+            return True
+        ca = Vector(c, self.a)
+        cb = Vector(c, self.b)
+        return ca.is_collinear(cb) and not ca.is_codirected(cb)

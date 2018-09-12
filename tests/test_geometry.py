@@ -91,3 +91,16 @@ def test_segment():
     s = Segment(a, b)
     assert s.a == a
     assert s.b == b
+
+
+@pytest.mark.parametrize(("a", "b", "c", "result"), [
+    ((0, 0), (2, 2), (1, 1), True),
+    ((0, 0), (1, 0), (1, 1), False),
+    ((0, 0), (2, 2), (2, 2), True),
+    ((0, 0), (2, 2), (0, 0), True),
+    ((0, 0), (2, 2), (-1, -1), False),
+])
+def test_segment_contains(a, b, c, result):
+    ab = Segment(Dot(*a), Dot(*b))
+    c = Dot(*c)
+    assert (c in ab) == result
