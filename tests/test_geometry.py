@@ -1,6 +1,6 @@
 import pytest
 
-from ..geometry import Dot, Vector, Segment
+from ..geometry import Dot, Vector, Segment, is_equal
 
 
 def test_dot():
@@ -104,3 +104,16 @@ def test_segment_contains(a, b, c, result):
     ab = Segment(Dot(*a), Dot(*b))
     c = Dot(*c)
     assert (c in ab) == result
+
+
+@pytest.mark.parametrize(("a", "b", "c", "v", "result"), [
+    ((-1, 1), (1, 1), (0, 0), (0, 1), 1),
+    ((0, 1), (1, 1), (0, 0), (0, 1), 1),
+    ((-1, 1), (0, 1), (0, 0), (0, 1), 1),
+    ((1, 1), (3, 1), (0, 0), (0, 1), 1),
+])
+def test_segment_distance(a, b, c, v, result):
+    ab = Segment(Dot(*a), Dot(*b))
+    c = Dot(*c)
+    v = Vector(*v)
+    assert is_equal(ab.distance(c, v), result)

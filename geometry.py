@@ -94,3 +94,25 @@ class Segment:
         ca = Vector(c, self.a)
         cb = Vector(c, self.b)
         return ca.is_collinear(cb) and not ca.is_codirected(cb)
+
+    def distance(self, a, v):
+        """Distance from Dot to Segment by given Vector."""
+
+        left = 0
+        right = 1000000
+        first_left_dot = a + v * left
+        left_val = Vector(first_left_dot, self.a) ^ Vector(
+            first_left_dot, self.b)
+
+        while not is_equal(left, right):
+            median = (left + right) / 2
+            median_dot = a + v * median
+            median_val = Vector(median_dot, self.a) ^ Vector(
+                median_dot, self.b)
+
+            if median_val * left_val > 0:
+                left = median
+            else:
+                right = median
+
+        return left
