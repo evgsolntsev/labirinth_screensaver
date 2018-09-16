@@ -27,6 +27,9 @@ class Dot:
     def __ne__(self, v):
         return not(self == v)
 
+    def __str__(self):
+        return "Dot({0}, {1})".format(self.x, self.y)
+
 
 class Vector:
     __slots__ = ("x", "y")
@@ -87,6 +90,9 @@ class Segment:
             raise Exception("Segment should be created from two Dots")
         self.a = a
         self.b = b
+
+    def __eq__(self, s):
+        return self.a == s.a and self.b == s.b
 
     def __contains__(self, c):
         if c == self.a or c == self.b:

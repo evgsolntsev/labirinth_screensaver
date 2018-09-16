@@ -6,6 +6,8 @@ import time
 
 import pygame
 
+from geometry import Segment, Dot, Vector
+
 
 YELLOW = (255, 255, 0)
 GREEN = (0, 255, 0)
@@ -104,7 +106,7 @@ class Level:
         self.n = n
         cell_height = float(height) / self.n
         cell_width = float(width) / self.n
-        self.vision_radius = int(cell_height)
+        self.vision_radius = int(cell_height * 2)
         self.cells = list()
         self.stack = list()
         for i in range(n):
@@ -209,8 +211,8 @@ class Level:
         )
 
         walls_for_shadows = []
-        for i in range(-1, 1):
-            for j in range(-1, 1):
+        for i in range(-2, 3):
+            for j in range(-2, 3):
                 cell_x, cell_y = self.player_x + i, self.player_y + j
                 if (
                     (cell_x > -1) and (cell_x < self.n) and
@@ -234,16 +236,83 @@ class Level:
                 [(w[0], w[1] + w[3]), (w[0], w[1])]
             ])
 
+        player_dot = Dot(*player_coords)
+        vertexes = []
+        for i, l in enumerate(lines_for_shadows):
+            phi1 = math.atan2(l[0][0] - player_dot.x, l[0][1] - player_dot.y)
+            phi2 = math.atan2(l[1][0] - player_dot.x, l[1][1] - player_dot.y)
+            v1 = Vector(player_dot, Dot(*l[0]))
+            v2 = Vector(player_dot, Dot(*l[1]))
+            vertexes.extend([
+                (phi1, i, v1 ^ v2 < 0, Dot(*l[0])),
+                (phi2, i, v1 ^ v2 > 0, Dot(*l[1])),
+            ])
+        vertexes.sort(key=lambda v: v[0])
+
         adding_surface = pygame.surface.Surface((self.h + 1, self.w + 1))
+        adding_surface.fill(pygame.color.Color("White"))
         out_surface = pygame.surface.Surface((self.h + 1, self.w + 1))
         out_surface.fill(pygame.color.Color("White"))
         pygame.draw.circle(
             out_surface, pygame.color.Color("Black"),
             player_coords, self.vision_radius)
 
-        # ray tracing?
+        # ray tracing
+        walls = []
+        closest_wall = Segment(Dot(0, 0), Dot(0, 0))
+        closest_wall_number = -1
+        last_triangle_vertex = None
+        for angle, line_number, is_start, dot in vertexes:
+            current_v = Vector(player_dot, dot)
+            l = lines_for_shadows[line_number]
+            segment = Segment(
+                Dot(l[0][0], l[0][1]), Dot(l[1][0], l[1][1]))
+            old_distance = None
+            if is_start:
+                walls.append(segment)
+                old_distance = closest_wall.distance(player_dot, current_v)
+                new_distance = segment.distance(player_dot, current_v)
+                if closest_wall_number == -1:
+                    closest_wall = segment
+                    closest_wall_number = line_number
+                elif new_distance < old_distance:
+                    closest_wall = segment
+                    closest_wall_number = line_number
+            else:
+                if closest_wall_number == -1:
+                    vertexes.append((angle, line_number, is_start, dot))
+                    continue
 
-        self.adding_surface.blit(
+                for i, w in enumerate(walls):
+                    if w == segment:
+                        walls.pop(i)
+                        if i == closest_wall_number:
+                            old_distance = segment.distance(player_dot, current_v)
+                            distance = 100000
+                            for j, cw in enumerate(walls):
+                                tmp = cw.distance(player_dot, current_v)
+                                if tmp < distance:
+                                    distance = tmp
+                                    closest_wall_number = j
+                                    closest_wall = cw
+                        break
+                else:
+                    vertexes.append((angle, line_number, is_start, dot))
+
+                if not old_distance:
+                    continue
+
+                new_triangle_dot = player_dot + current_v * old_distance
+                new_triangle_vertex = [new_triangle_dot.x, new_triangle_dot.y]
+                if last_triangle_vertex is not None:
+                    pygame.draw.polygon(
+                        adding_surface, (50, 50, 50, 255), [
+                            player_coords, last_triangle_vertex,
+                            new_triangle_vertex])
+                last_triangle_vertex = new_triangle_vertex
+                
+        # sys.exit(0)
+        adding_surface.blit(
             out_surface, (0, 0), special_flags=pygame.BLEND_RGBA_MAX)
         self.filter_surface.blit(
             adding_surface, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
