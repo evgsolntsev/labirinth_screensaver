@@ -310,7 +310,7 @@ class Level:
                             player_coords, last_triangle_vertex,
                             new_triangle_vertex])
                 last_triangle_vertex = new_triangle_vertex
-                
+
         # sys.exit(0)
         adding_surface.blit(
             out_surface, (0, 0), special_flags=pygame.BLEND_RGBA_MAX)
