@@ -46,10 +46,10 @@ height, width = geometry.width, geometry.height
 
 
 def get_n():
-    return random.randint(20, 50)
+    return random.randint(20, 30)
 
 
-N = get_n()
+N = 30 #get_n()
 edge = math.ceil(min(height, width) * 9 / 10)
 level = Level(N, edge, edge)
 while True:
@@ -57,8 +57,7 @@ while True:
     try:
         surface = level.draw()
         screen.blit(
-            surface, (int((height - edge) / 2), int((width - edge) / 2)),
-            special_flags=pygame.BLEND_RGBA_ADD)
+            surface, (int((height - edge) / 2), int((width - edge) / 2)))
     except:
         level = Level(get_n(), edge, edge)
         raise
