@@ -255,9 +255,6 @@ class Level:
             lambda line: is_dot_near(line[0]) or is_dot_near(line[1]),
             self.wall_lines))
 
-        #for line in actual_lines:
-        #    pygame.draw.line(surface, (255, 255, 255), line[0], line[1], 1)
-
         circle_surface = pygame.surface.Surface((2 * radius, 2 * radius))
         white_surface = pygame.surface.Surface((2 * radius, 2 * radius))
         circle_surface.fill(LIGHT_COLOUR)
@@ -297,7 +294,10 @@ class Level:
             return ((vec_mul(a, v) * vec_mul(v, b)) > 0) and (
                 (vec_mul(a, v) * vec_mul(a, b)) > 0)
 
+        tmp_surface = pygame.surface.Surface((2 * radius, 2 * radius))
+
         for line in actual_lines:
+            tmp_surface.fill(pygame.color.Color("Black"))
             a = (
                 line[0][0] - player_coords[0] + radius,
                 line[0][1] - player_coords[1] + radius)
@@ -305,10 +305,10 @@ class Level:
                 line[1][0] - player_coords[0] + radius,
                 line[1][1] - player_coords[1] + radius)
 
-            if if_in_square(a) and not if_in_square(b):
-                b = find_intersection_point(a, b)
-            elif if_in_square(b) and not if_in_square(a):
-                a = find_intersection_point(b, a)
+#            if if_in_square(a) and not if_in_square(b):
+#                b = find_intersection_point(a, b)
+#            elif if_in_square(b) and not if_in_square(a):
+#                a = find_intersection_point(b, a)
 
             a_intersec = find_intersection_point((radius, radius), a)
             b_intersec = find_intersection_point((radius, radius), b)
@@ -321,19 +321,13 @@ class Level:
                     polygon.append(v)
 
             polygon += [b_intersec, b]
-            pygame.draw.polygon(
-                circle_surface, pygame.color.Color("White"),
-                polygon)
-#            pygame.draw.line(
-#                circle_surface, pygame.color.Color("Green"),
-#                a, b)
-#            pygame.draw.line(
-#                circle_surface, pygame.color.Color("Red"),
-#                (radius, radius), b)
-#            pygame.draw.line(
-#                circle_surface, pygame.color.Color("Red"),
-#                (radius, radius), a)
 
+            pygame.draw.polygon(
+                tmp_surface, pygame.color.Color("White"),
+                polygon)
+            pygame.draw.line(tmp_surface, LIGHT_COLOUR, a, b)
+            circle_surface.blit(
+                tmp_surface, (0, 0), special_flags=pygame.BLEND_RGBA_MAX)
 
         # cut outer of circle
         circle_surface.blit(
