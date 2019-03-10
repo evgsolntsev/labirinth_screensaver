@@ -37,6 +37,7 @@ class Cell:
     visited = False
     height = None
     width = None
+    score = 1
 
     def __init__(self, x, y, h, w):
         self.x = x
@@ -114,6 +115,7 @@ class Level:
     cells_surface = None
     h = 0
     w = 0
+    score = 0
 
     def __init__(self, n, height, width):
         self.n = n
@@ -227,10 +229,13 @@ class Level:
             self.player_x = self.next_player_x
             self.player_y = self.next_player_y
             cell = self.get_cell(self.next_player_x, self.next_player_y)
+            if cell.visited is False:
+                cell.visited = True
+                self.score += cell.score
             self.stack.append(cell)
             for c in self.neighbours(cell):
                 if not c.visited:
-                    c.visited = True
+                    # c.visited = True
                     break
             else:
                 self.stack.pop()
@@ -238,6 +243,15 @@ class Level:
 
             self.next_player_x = c.x
             self.next_player_y = c.y
+
+        for i in range(self.n):
+            for j in range(self.n):
+                c = self.get_cell(i, j)
+                if not c.visited:
+                    pygame.draw.circle(
+                    surface, pygame.color.Color("Gold"),
+                    (int(cell_height * (i + 0.5)), int(cell_width * (j + 0.5))),
+                    int(cell_height / 8.0))
 
         player_coords = self.player.draw(
             surface,
@@ -349,11 +363,5 @@ class Level:
 
         surface.blit(
             lightening_surface, (0, 0), special_flags=pygame.BLEND_RGBA_SUB)
-
-        if (
-            self.player_x == (self.n - 1) and
-            self.player_y == (self.n - 1)
-        ):
-            sys.exit(0)
 
         return surface

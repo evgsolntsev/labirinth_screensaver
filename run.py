@@ -52,15 +52,35 @@ def get_n():
 N = 30 #get_n()
 edge = math.ceil(min(height, width) * 9 / 10)
 level = Level(N, edge, edge)
+
+pygame.font.init()
+myfont = pygame.font.SysFont('Comic Sans MS', 32)
+
+TARGET_SCORE = N ** 2 - 1
+WAIT = 5
+NEXT = 0
+congrats_counter = 0
 while True:
     screen.fill(BLACK)
-    try:
+    if level.score != TARGET_SCORE:
+        congrats_counter = 0
         surface = level.draw()
-        screen.blit(
-            surface, (int((height - edge) / 2), int((width - edge) / 2)))
-    except:
-        level = Level(get_n(), edge, edge)
-        raise
+        coords = (int((height - edge) / 2), int((width - edge) / 2))
+        screen.blit(surface, coords)
+
+    if level.score == TARGET_SCORE:
+        if NEXT == 0:
+            NEXT = time.time() + 5
+        if NEXT <= time.time():
+            level = Level(N, edge, edge)
+            NEXT = 0
+            continue
+        text = "Congratulations! Next round in: {0}".format(
+            int(NEXT - time.time()))
+    else:
+        text = "Collected: {0} / {1}.".format(level.score, TARGET_SCORE)
+    textsurface = myfont.render(text, False, pygame.color.Color("Limegreen"))
+    screen.blit(textsurface, (coords[0], int((width - edge) / 4)))
 
     if DEBUG:
         events = pygame.event.get()
